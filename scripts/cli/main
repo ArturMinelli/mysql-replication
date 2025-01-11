@@ -1,0 +1,26 @@
+#!/bin/bash
+
+function list_commands() {
+    commands=$(ls /usr/local/mysql-repl/commands)
+
+    echo "Usage: mysql-repl {command}"
+    echo "Commands:"
+
+    for command in $commands; do
+        command_name=$(basename $command)
+        echo "  $command_name"
+    done
+}
+
+if [ "$#" -eq 0 ]; then
+    list_commands
+    exit 1
+fi
+
+if [ "$1" == "sync" ]; then
+    echo "Syncing"
+    /usr/local/mysql-repl/commands/sync
+    echo "Synced"
+fi
+
+exit 0

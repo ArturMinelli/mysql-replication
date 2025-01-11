@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function client() {
-    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "$1"
+    mysql --defaults-extra-file=/usr/local/mysql-repl/conf.d/self.cnf -e "$1"
 }
 
 function print_step() {
@@ -9,7 +9,7 @@ function print_step() {
 }
 
 if [ "$MYSQL_ROLE" != "replica" ]; then
-  exit
+  exit 0
 fi
 
 print_step "Setting up replica"
@@ -41,3 +41,5 @@ print_step "Setting up replica"
 
     print_step "Done"
 ) &
+
+exit 0

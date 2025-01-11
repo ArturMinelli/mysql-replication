@@ -1,0 +1,39 @@
+#!/bin/bash
+
+function master_client() {
+    mysql --defaults-extra-file=/usr/local/mysql-repl/conf.d/self.cnf -e "$1"
+}
+
+function replica_client() {
+    mysql --defaults-extra-file=/usr/local/mysql-repl/conf.d/self.cnf -e "$1"
+}
+
+if [ "$MYSQL_ROLE" != "replica" ]; then
+    echo "This command is only available on the replica"
+    exit 1
+fi
+
+replica_client "
+    DROP DATABASE IF EXISTS $MYSQL_DATABASE;
+    CREATE DATABASE $MYSQL_DATABASE;
+"
+
+mysqldump --defaults-extra-file=/usr/local/mysql-repl/conf.d/master.cnf $MYSQL_DATABASE | mysql --defaults-extra-file=/usr/local/mysql-repl/conf.d/self.cnf $MYSQL_DATABASE
+
+master_client "
+    RESET MASTER;
+"
+
+replica_client "
+    STOP REPLICA;
+
+    RESET REPLICA;
+
+    CHANGE MASTER TO
+        MASTER_HOST='$MYSQL_REPLICATION_HOST',
+        MASTER_PORT=$MYSQL_REPLICATION_PORT,
+        MASTER_USER='$MYSQL_REPLICATION_USER',
+        MASTER_PASSWORD='$MYSQL_REPLICATION_PASSWORD';
+
+    START REPLICA;
+"
