@@ -1,20 +1,33 @@
 #!/bin/bash
 
-echo $MYSQL_ROLE
+function client() {
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "$1"
+}
+
+function print_step() {
+    echo "[REPLICATION] [MASTER] $1"
+}
 
 if [ "$MYSQL_ROLE" != "master" ]; then 
   exit
 fi
 
-echo "Scheduling mysql replication commands..."
+print_step "Setting up master"
 
 (
+    print_step "Waiting for mysql database to be up"
 
-    sleep 20
+    while ! client "SELECT 1;" &> /dev/null; do
+        sleep 1
+    done
 
-    echo "Creating replication user..."
+    print_step "Executing master commands"
 
-    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "
+    client "
+        RESET MASTER;
+
+        DROP USER IF EXISTS '$MYSQL_REPLICATION_USER'@'%';
+
         CREATE USER '$MYSQL_REPLICATION_USER'@'%' IDENTIFIED WITH mysql_native_password BY '$MYSQL_REPLICATION_PASSWORD';
 
         GRANT REPLICATION SLAVE ON *.* TO '$MYSQL_REPLICATION_USER'@'%';
@@ -22,6 +35,5 @@ echo "Scheduling mysql replication commands..."
         FLUSH PRIVILEGES;
     "
 
+    print_step "Done"
 ) &
-
-echo "Done"

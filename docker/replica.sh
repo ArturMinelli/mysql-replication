@@ -1,17 +1,31 @@
 #!/bin/bash
 
-echo $MYSQL_ROLE
+function client() {
+    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "$1"
+}
+
+function print_step() {
+    echo "[REPLICATION] [REPLICA] $1"
+}
 
 if [ "$MYSQL_ROLE" != "replica" ]; then
   exit
 fi
 
-echo "Scheduling mysql replication commands..."
+print_step "Setting up replica"
 
 (
-    sleep 25
+    print_step "Waiting for mysql database to be up"
 
-    mysql -uroot -p$MYSQL_ROOT_PASSWORD -e "
+    while ! client "SELECT 1;" &> /dev/null; do
+        sleep 1
+    done
+
+    sleep 5
+
+    print_step "Executing replica commands"
+
+    client "
         STOP REPLICA;
 
         RESET REPLICA;
@@ -24,6 +38,6 @@ echo "Scheduling mysql replication commands..."
 
         START REPLICA;
     "
-) &
 
-echo "Done"
+    print_step "Done"
+) &

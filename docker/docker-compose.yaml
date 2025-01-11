@@ -1,12 +1,13 @@
-version: '3.8'
-
 services:
   mysql-master:
-    image: mysql:8.0.26
+    image: mysql-replication
+    container_name: mysql-master
     environment:
       MYSQL_SERVER_ID: 1
       MYSQL_DATABASE: mydb
       MYSQL_ROLE: master
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: root
       MYSQL_REPLICATION_USER: repl
       MYSQL_REPLICATION_PASSWORD: repl
@@ -14,17 +15,19 @@ services:
       - "3306:3306"
     volumes:
       - master-data:/var/lib/mysql
-      - ./master.sh:/docker-entrypoint-initdb.d/master.sh
-    command: --server-id=1 --log_bin=1 --binlog_format=ROW --binlog_do_db=mydb --default-authentication-plugin=mysql_native_password --skip-name-resolve
     networks:
       - mysql-network
+    restart: always
 
   mysql-replica:
-    image: mysql:8.0.26
+    image: mysql-replication
+    container_name: mysql-replica
     environment:
       MYSQL_SERVER_ID: 2
       MYSQL_DATABASE: mydb
       MYSQL_ROLE: replica
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: root
       MYSQL_REPLICATION_HOST: mysql-master
       MYSQL_REPLICATION_PORT: 3306
@@ -34,10 +37,9 @@ services:
       - "3307:3306"
     volumes:
       - replica-data:/var/lib/mysql
-      - ./replica.sh:/docker-entrypoint-initdb.d/replica.sh
-    command: --server-id=2 --log_bin=1 --binlog_format=ROW --binlog_do_db=mydb --default-authentication-plugin=mysql_native_password --skip-name-resolve
     networks:
       - mysql-network
+    restart: always
 
 volumes:
   master-data:
