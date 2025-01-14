@@ -36,7 +36,7 @@ Easly setup mysql replication.
 ```yaml
 services:
   mysql-master:
-    image: mysql-replication
+    image: arturminelli/mysql-replication
     container_name: mysql-master
     environment:
       MYSQL_SERVER_ID: 1
@@ -56,7 +56,7 @@ services:
     restart: always
 
   mysql-replica:
-    image: mysql-replication
+    image: arturminelli/mysql-replication
     container_name: mysql-replica
     environment:
       MYSQL_SERVER_ID: 2
