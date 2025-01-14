@@ -85,3 +85,9 @@ networks:
   mysql-network:
 
 ```
+
+The image is available on Docker Hub
+
+```sh
+docker pull arturminelli/mysql-replication
+```
